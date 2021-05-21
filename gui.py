@@ -1,96 +1,129 @@
-from tkinter import *
+import tkinter as tk
 from tkinter import ttk
 import item_data as itemData
-import os
-
+from tkinter import *
 
 dataBase = itemData.Database()
-dataBase.refresh_data()
 allItems = dataBase.data()
 
-root = Tk()
-root.title("GW2 - Trading information")
-root.iconphoto(False, PhotoImage(file="icon.png"))
-root.geometry("1000x600")
+try:
+    file = open("saved.txt", "r")
+    file.close()
+except:
+    file = open("saved.txt", "w")
+    file.close()
 
-main_frame = Frame(root)
-main_frame.pack(fill=BOTH, expand=1)
+def update_saved_items():
+    file = open("saved.txt", "r")
+    savedItems = file.read()
+    savedItems = savedItems.split("\n")
 
-my_canvas = Canvas(main_frame)
-my_canvas.pack(side=LEFT, fill=BOTH, expand=1)
+update_saved_items()
 
-my_scrollbar = ttk.Scrollbar(main_frame, orient=VERTICAL, command=my_canvas.yview)
-my_scrollbar.pack(side=RIGHT, fill=Y)
+class ItemExplorer:
+    def update_list(self, data):
+        #Clear list box
+        self.my_list.delete(0, END)
 
-my_canvas.configure(yscrollcommand=my_scrollbar.set)
-my_canvas.bind('<Configure>', lambda e: my_canvas.configure(scrollregion=my_canvas.bbox("all")))
+        for item in data:
+            self.my_list.insert(END, item['name'])
 
-second_frame = Frame(my_canvas)
+    def __init__(self, root=None):
+        self.root = root
+        self.main_frame = tk.Frame(root)
+        self.main_frame.pack(fill="both", expand=1)
+        self.saved_page = SavedPage(master=self.root, app=self)
 
-my_canvas.create_window((0,0), window=second_frame, anchor="nw")
+        self.my_canvas = tk.Canvas(self.main_frame)
+        self.my_canvas.pack(side=LEFT, fill=BOTH, expand=1)
 
-def item(positiony, index):
-    Button(second_frame, text=f"{allItems[index]['name']}").pack(pady=5, padx = 5, anchor=W)
+        self.my_scrollbar = ttk.Scrollbar(self.main_frame, orient=VERTICAL, command=self.my_canvas.yview)
+        self.my_scrollbar.pack(side=RIGHT, fill=Y)
 
+        self.my_canvas.configure(yscrollcommand=self.my_scrollbar.set)
+        self.my_canvas.bind('<Configure>', lambda e: self.my_canvas.configure(scrollregion=self.my_canvas.bbox("all")))
 
-my_label = Label(second_frame, text="Start typing to find materials...",
-           font=("Helvetica", 14), fg="grey").pack(pady=20, anchor=CENTER)
+        self.second_frame = tk.Frame(self.my_canvas)
 
-my_entry = Entry(second_frame, font=("Helvetica", 20))
-my_entry.pack()
+        self.my_canvas.create_window((0,0), window=self.second_frame, anchor="nw")
 
-my_list = Listbox(second_frame, width=50, height=20)
-my_list.pack(pady=40, padx=40, side=LEFT)
+        self.my_label = tk.Label(self.second_frame, text="Start typing to find materials...",
+                font=("Helvetica", 14), fg="grey").pack(pady=20, anchor=CENTER)
 
-my_new_list = Listbox(second_frame, width=50, height=20)
-my_new_list.pack(pady=40, padx=40, side=RIGHT)
+        self.my_entry = tk.Entry(self.second_frame, font=("Helvetica", 20))
+        self.my_entry.pack()
 
-def fillout(e):
-    my_new_list.delete(0, END)
-    list_data = []
+        self.my_list = tk.Listbox(self.second_frame, width=50, height=20)
+        self.my_list.pack(pady=40, padx=40, side=LEFT)
 
-    for item in allItems:
-        if my_list.get(ACTIVE) == item['name']:
-            list_data.append(f"Name: {item['name']}")
-            list_data.append(f"Data ID: {item['data_id']}")
-            list_data.append(f"Rarity: {item['rarity']}")
-            list_data.append(f"Restriction Level {item['restriction_level']}")
-            list_data.append(f"Last Updated: {item['price_last_changed']}")
-            list_data.append(f"Buy: {item['max_offer_unit_price']}")
-            list_data.append(f"Sell: {item['min_sale_unit_price']}")
-            list_data.append("______________________________________")
-    
-    for items in list_data:
-        my_new_list.insert(END, items)
+        self.my_new_list = tk.Listbox(self.second_frame, width=50, height=20)
+        self.my_new_list.pack(pady=40, padx=40, side=RIGHT)
 
+        self.my_list.bind("<<ListboxSelect>>", self.fillout)
 
-def check(e):
-    typed = my_entry.get()
+        self.my_entry.bind("<KeyRelease>", self.check)
 
-    if typed == "":
-        data = allItems
-    else:
-        data = []
+        self.refresh = tk.Button(self.main_frame, text="Refresh List", command=self.update_all_items)
+        self.refresh.pack()
+        self.saved = tk.Button(self.main_frame, text="Saved Items", command=self.go_to_saved)
+        self.saved.pack(side=BOTTOM, anchor=CENTER)
+
+        self.update_list(allItems)
+
+    def update_all_items(self):
+        dataBase.refresh_data()
+        self.update_list(allItems)
+
+    def fillout(self, e):
+        self.my_new_list.delete(0, END)
+        list_data = []
+
         for item in allItems:
-            if typed.lower() in item['name'].lower():
-                data.append(item)
+            if self.my_list.get(ACTIVE) == item['name']:
+                list_data.append(f"Name: {item['name']}")
+                list_data.append(f"Data ID: {item['data_id']}")
+                list_data.append(f"Rarity: {item['rarity']}")
+                list_data.append(f"Restriction Level {item['restriction_level']}")
+                list_data.append(f"Last Updated: {item['price_last_changed']}")
+                list_data.append(f"Buy: {item['max_offer_unit_price']}")
+                list_data.append(f"Sell: {item['min_sale_unit_price']}")
+                list_data.append("______________________________________")
+            
+        for items in list_data:
+            self.my_new_list.insert(END, items)
 
-    update_list(data)
+    def check(self, e):
+        typed = self.my_entry.get()
+
+        if typed == "":
+            data = allItems
+        else:
+            data = []
+            for item in allItems:
+                if typed.lower() in item['name'].lower():
+                    data.append(item)
         
+        self.update_list(data)
 
-def update_list(data):
-    #Clear list box
-    my_list.delete(0, END)
+    def go_to_saved(self):
+        self.main_frame.pack_forget()
+        self.saved_page.start_page()
 
-    for item in data:
-        my_list.insert(END, item['name'])
+class SavedPage:
+    def __init__(self, master=None, app=None):
+        self.master = master
+        self.app = app
+        self.frame = tk.Frame(self.master)
+        tk.Label(self.frame, text='Page 1').pack()
+        #tk.Button(self.frame, text='Go back', command=self.go_back).pack()
 
-update_list(allItems)
+    def start_page(self):
+        self.frame.pack()
 
-
-my_list.bind("<<ListboxSelect>>", fillout)
-
-my_entry.bind("<KeyRelease>", check)
-
-
-root.mainloop()
+if __name__ == '__main__':
+    root = tk.Tk()
+    root.title("GW2 - Trading information")
+    root.iconphoto(False, tk.PhotoImage(file="icon.png"))
+    root.geometry("1000x600")
+    app = ItemExplorer()
+    root.mainloop()
