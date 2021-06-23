@@ -35,10 +35,9 @@ class Database:
 
         return self.jsonToPython['results']
 
-""" -- Testing
-dataBaseSet = Database()
-dataBaseSet.refresh_data()
-dataSheet = dataBaseSet.data()
+if __name__ == "__main__":
+    dataBaseSet = Database()
+    dataBaseSet.refresh_data()
+    dataSheet = dataBaseSet.data()
 
-print(dataSheet[0]['name'])
-"""
+    print(dataSheet[0]['name'])
