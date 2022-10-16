@@ -1,1 +1,1 @@
-##GW2 Trading Data
+# GW2 Trading Data
