@@ -190,7 +190,7 @@ class SavedPage:
                 list_data.append(f"Name: {item['name']}")
                 list_data.append(f"Data ID: {item['data_id']}")
                 list_data.append(f"Rarity: {item['rarity']}")
-                list_data.append(f"Restriction Level {item['restriction_level']}")
+                list_data.append(f"Level To Use:  {item['restriction_level']}")
                 list_data.append(f"Last Updated: {item['price_last_changed']}")
                 list_data.append(f"Buy: {item['max_offer_unit_price']}")
                 list_data.append(f"Sell: {item['min_sale_unit_price']}")
